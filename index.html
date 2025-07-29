@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>厨房烹饪小游戏</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- 主界面 -->
+        <div id="main-menu" class="page active">
+            <div class="container">
+                <h1 class="game-title">🍳 厨房烹饪小游戏</h1>
+                <div class="game-intro">
+                    <h2>游戏介绍</h2>
+                    <p>欢迎来到美食世界！在这里，你可以：</p>
+                    <ul>
+                        <li>🎮 选择食材和调味料进行烹饪</li>
+                        <li>💰 通过烹饪获得金币奖励</li>
+                        <li>📖 使用特定食材组合解锁菜品图鉴</li>
+                        <li>🏆 在排行榜中展示你的厨艺</li>
+                        <li>🌍 在世界交友中结识美食达人</li>
+                        <li>📚 获得美食秘籍提升技能</li>
+                    </ul>
+                </div>
+                <div class="menu-buttons">
+                    <button class="btn btn-primary" onclick="showPage('game')">开始游戏</button>
+                    <button class="btn btn-secondary" onclick="showPage('leaderboard')">排行榜</button>
+                    <button class="btn btn-secondary" onclick="showPage('social')">世界交友</button>
+                    <button class="btn btn-secondary" onclick="showPage('cookbook')">菜品图鉴</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div id="game" class="page">
+            <div class="game-header">
+                <div class="player-info">
+                    <span>等级: <span id="player-level">1</span></span>
+                    <span>金币: <span id="player-coins">100</span></span>
+                </div>
+                <button class="btn btn-small" onclick="showPage('main-menu')">返回主菜单</button>
+            </div>
+            
+            <div class="game-content">
+                <div class="cooking-area">
+                                    <div class="cooking-header">
+                    <h2>烹饪区域</h2>
+                    <div class="cooking-buttons">
+                        <button class="btn btn-secondary" onclick="uiManager.showInventory()">📦 背包</button>
+                        <button class="btn btn-secondary" onclick="uiManager.showShop()">🛒 商店</button>
+                    </div>
+                </div>
+                    <div class="ingredients-selection">
+                        <h3>选择食材</h3>
+                        <div id="ingredients-grid" class="grid"></div>
+                    </div>
+                    
+                    <div class="seasoning-selection">
+                        <h3>选择调味料</h3>
+                        <div id="seasonings-grid" class="grid"></div>
+                    </div>
+                    
+                    <div class="cooking-method">
+                        <h3>烹饪方式</h3>
+                        <select id="cooking-method">
+                            <option value="fry">炒</option>
+                            <option value="boil">煮</option>
+                            <option value="steam">蒸</option>
+                            <option value="bake">烤</option>
+                        </select>
+                    </div>
+                    
+
+                    
+                    <button id="start-cooking" class="btn btn-primary" onclick="startCooking()">开始烹饪</button>
+                </div>
+                
+                <div class="cooking-animation" id="cooking-animation" style="display: none;">
+                    <div class="pot">
+                        <div class="bubbles"></div>
+                    </div>
+                    <p>正在烹饪中...</p>
+                </div>
+                
+                <div class="result" id="cooking-result" style="display: none;">
+                    <h3>烹饪结果</h3>
+                    <div id="dish-info" style="display: none;"></div>
+                    <div class="score">评分: <span id="cooking-score">0</span>/100</div>
+                    <div class="reward">获得金币: <span id="coins-earned">0</span></div>
+                    <button class="btn btn-primary" onclick="resetCooking()">再次烹饪</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 排行榜界面 -->
+        <div id="leaderboard" class="page">
+            <div class="page-header">
+                <h2>🏆 排行榜</h2>
+                <button class="btn btn-small" onclick="showPage('main-menu')">返回主菜单</button>
+            </div>
+            
+            <div class="leaderboard-content">
+                <div class="filter-buttons">
+                    <button class="btn btn-filter active" onclick="filterLeaderboard('level')">按等级</button>
+                    <button class="btn btn-filter" onclick="filterLeaderboard('coins')">按金币</button>
+                    <button class="btn btn-filter" onclick="filterLeaderboard('score')">按最高分</button>
+                </div>
+                
+                <div class="leaderboard-list" id="leaderboard-list">
+                    <!-- 排行榜数据将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 世界交友界面 -->
+        <div id="social" class="page">
+            <div class="page-header">
+                <h2>🌍 世界交友</h2>
+                <button class="btn btn-small" onclick="showPage('main-menu')">返回主菜单</button>
+            </div>
+            
+            <div class="islands-container" id="islands-container">
+                <!-- 美食岛数据将通过JavaScript动态生成 -->
+            </div>
+        </div>
+
+        <!-- 菜品图鉴界面 -->
+        <div id="cookbook" class="page">
+            <div class="page-header">
+                <h2>📖 菜品图鉴</h2>
+                <button class="btn btn-small" onclick="showPage('main-menu')">返回主菜单</button>
+            </div>
+            
+            <div class="cookbook-content">
+                <div class="cookbook-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">已发现:</span>
+                        <span class="stat-value" id="discovered-count">0</span>
+                        <span class="stat-total">/ <span id="total-dishes">0</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">完成度:</span>
+                        <span class="stat-value" id="completion-rate">0%</span>
+                    </div>
+                </div>
+                
+                <div class="cookbook-filters">
+                    <button class="filter-btn active" onclick="filterDishes('all')">全部</button>
+                    <button class="filter-btn" onclick="filterDishes('common')">普通</button>
+                    <button class="filter-btn" onclick="filterDishes('rare')">稀有</button>
+                    <button class="filter-btn" onclick="filterDishes('epic')">史诗</button>
+                    <button class="filter-btn" onclick="filterDishes('legendary')">传说</button>
+                    <button class="filter-btn" onclick="filterDishes('dark')">黑暗料理</button>
+                </div>
+                
+                <div class="dishes-grid" id="dishes-grid">
+                    <!-- 菜品数据将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game-data.js"></script>
+    <script src="js/game-logic.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 
