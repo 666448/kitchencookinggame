@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频控制面板测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .success {
+            background: rgba(40, 167, 69, 0.3);
+        }
+        
+        .error {
+            background: rgba(220, 53, 69, 0.3);
+        }
+        
+        .warning {
+            background: rgba(255, 193, 7, 0.3);
+        }
+        
+        /* 音频控制样式 */
+        .audio-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .audio-control-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audio-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+        }
+
+        #volume-slider {
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        #volume-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎛️ 音频控制面板测试</h1>
+        <p>测试音频控制面板是否正常显示和工作</p>
+        
+        <div class="test-section">
+            <h2>🔍 检查音频管理器</h2>
+            <button class="test-button" onclick="checkAudioManager()">检查音频管理器</button>
+            <button class="test-button" onclick="testAudioControls()">测试音频控制</button>
+            <button class="test-button" onclick="forceInitAudioControls()">强制初始化音频控制</button>
+            <div id="manager-status" class="status"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎵 测试音频功能</h2>
+            <button class="test-button" onclick="testBackgroundMusic()">播放背景音乐</button>
+            <button class="test-button" onclick="testSound('cooking')">烹饪音效</button>
+            <button class="test-button" onclick="testSound('success')">成功音效</button>
+            <button class="test-button" onclick="testSound('error')">错误音效</button>
+            <button class="test-button" onclick="testSound('click')">点击音效</button>
+            <button class="test-button" onclick="testSound('coin')">金币音效</button>
+            <div id="audio-status" class="status"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔗 快速链接</h2>
+            <button class="test-button" onclick="window.location.href='index.html'">返回主游戏</button>
+            <button class="test-button" onclick="window.location.href='quick-test.html'">音乐快速测试</button>
+            <button class="test-button" onclick="window.location.href='audio-test.html'">完整音频测试</button>
+        </div>
+    </div>
+
+    <script src="js/audio-manager.js"></script>
+    <script>
+        let audioManager = null;
+        
+        // 页面加载时检查
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAudioManager();
+        });
+        
+        function checkAudioManager() {
+            const statusElement = document.getElementById('manager-status');
+            
+            if (window.audioManager) {
+                audioManager = window.audioManager;
+                statusElement.innerHTML = `
+                    <span class="success">✅ 音频管理器已加载</span><br>
+                    - 音乐开关: ${audioManager.isMusicEnabled ? '✅ 开启' : '❌ 关闭'}<br>
+                    - 音效开关: ${audioManager.isSoundEnabled ? '✅ 开启' : '❌ 关闭'}<br>
+                    - 音量: ${Math.round(audioManager.currentVolume * 100)}%<br>
+                    - 背景音乐: ${audioManager.backgroundMusic ? '✅ 已加载' : '❌ 未加载'}
+                `;
+            } else {
+                statusElement.innerHTML = '<span class="error">❌ 音频管理器未加载</span>';
+            }
+        }
+        
+        function testAudioControls() {
+            const statusElement = document.getElementById('manager-status');
+            const controls = document.querySelector('.audio-controls');
+            
+            if (controls) {
+                statusElement.innerHTML += '<br><span class="success">✅ 音频控制面板已显示</span>';
+            } else {
+                statusElement.innerHTML += '<br><span class="error">❌ 音频控制面板未显示</span>';
+            }
+        }
+        
+        function forceInitAudioControls() {
+            if (window.audioManager) {
+                audioManager.initAudioControls();
+                setTimeout(() => {
+                    testAudioControls();
+                }, 100);
+            } else {
+                document.getElementById('manager-status').innerHTML = '<span class="error">❌ 音频管理器未加载，无法初始化控制面板</span>';
+            }
+        }
+        
+        function testBackgroundMusic() {
+            if (audioManager) {
+                audioManager.playBackgroundMusic();
+                document.getElementById('audio-status').innerHTML = '<span class="success">✅ 背景音乐已开始播放</span>';
+            } else {
+                document.getElementById('audio-status').innerHTML = '<span class="error">❌ 音频管理器未加载</span>';
+            }
+        }
+        
+        function testSound(soundName) {
+            if (audioManager) {
+                audioManager.playSound(soundName);
+                document.getElementById('audio-status').innerHTML = `<span class="success">✅ 播放音效: ${soundName}</span>`;
+            } else {
+                document.getElementById('audio-status').innerHTML = '<span class="error">❌ 音频管理器未加载</span>';
+            }
+        }
+        
+        // 自动初始化音频控制
+        setTimeout(() => {
+            if (window.audioManager) {
+                audioManager.initAudioControls();
+            }
+        }, 500);
+    </script>
+</body>
+</html> 

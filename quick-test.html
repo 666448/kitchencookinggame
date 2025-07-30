@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐快速测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            text-align: center;
+        }
+        
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .success {
+            background: rgba(40, 167, 69, 0.3);
+            border-left: 4px solid #28a745;
+        }
+        
+        .error {
+            background: rgba(220, 53, 69, 0.3);
+            border-left: 4px solid #dc3545;
+        }
+        
+        .loading {
+            background: rgba(255, 193, 7, 0.3);
+            border-left: 4px solid #ffc107;
+        }
+        
+        .file-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎵 音乐快速测试</h1>
+        <p>测试重命名后的音乐文件是否能正常播放</p>
+        
+        <div class="file-info">
+            <h3>📁 文件信息</h3>
+            <p><strong>文件名：</strong>piano_music.mp3</p>
+            <p><strong>路径：</strong>audio/piano_music.mp3</p>
+            <p><strong>大小：</strong>7.9MB</p>
+        </div>
+        
+        <button class="test-button" onclick="testMusic()">🎵 播放音乐</button>
+        <button class="test-button" onclick="stopMusic()">⏹️ 停止音乐</button>
+        <button class="test-button" onclick="testGame()">🎮 测试游戏</button>
+        
+        <div id="status" class="status loading">
+            🔄 准备测试...
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <a href="index.html" class="test-button" style="text-decoration: none; display: inline-block;">
+                🏠 返回主游戏
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let audio = null;
+        let isPlaying = false;
+        
+        // 页面加载时检查文件
+        window.addEventListener('load', () => {
+            checkFile();
+        });
+        
+        function checkFile() {
+            updateStatus('🔄 检查音乐文件...', 'loading');
+            
+            fetch('audio/piano_music.mp3', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        updateStatus('✅ 音乐文件存在，可以正常使用', 'success');
+                    } else {
+                        updateStatus('❌ 音乐文件不存在或无法访问', 'error');
+                    }
+                })
+                .catch(error => {
+                    updateStatus('❌ 检查文件时出错: ' + error.message, 'error');
+                });
+        }
+        
+        function testMusic() {
+            if (!audio) {
+                audio = new Audio('audio/piano_music.mp3');
+                audio.loop = true;
+                audio.volume = 0.5;
+                
+                audio.addEventListener('loadstart', () => {
+                    updateStatus('🔄 开始加载音乐文件...', 'loading');
+                });
+                
+                audio.addEventListener('canplay', () => {
+                    updateStatus('✅ 音乐文件加载成功，可以播放', 'success');
+                });
+                
+                audio.addEventListener('error', (e) => {
+                    updateStatus('❌ 音乐文件加载失败: ' + e.message, 'error');
+                });
+            }
+            
+            audio.play().then(() => {
+                isPlaying = true;
+                updateStatus('🎵 音乐正在播放中...', 'success');
+            }).catch(error => {
+                updateStatus('❌ 播放失败: ' + error.message, 'error');
+            });
+        }
+        
+        function stopMusic() {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+                isPlaying = false;
+                updateStatus('⏹️ 音乐已停止', 'loading');
+            }
+        }
+        
+        function testGame() {
+            updateStatus('🔄 正在跳转到游戏页面...', 'loading');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        }
+        
+        function updateStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+    </script>
+</body>
+</html> 

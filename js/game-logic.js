@@ -134,6 +134,11 @@ class GameLogic {
             return;
         }
 
+        // 播放烹饪音效
+        if (window.audioManager) {
+            audioManager.playSound('cooking');
+        }
+
         // 显示烹饪动画
         this.showCookingAnimation();
 
@@ -337,6 +342,11 @@ class GameLogic {
         
         // 更新金币
         this.playerData.coins += result.coinsEarned;
+        
+        // 播放金币音效
+        if (window.audioManager && result.coinsEarned > 0) {
+            audioManager.playSound('coin');
+        }
 
         // 更新最高分
         if (result.score > this.playerData.maxScore) {
@@ -504,6 +514,21 @@ class GameLogic {
 
     // 显示通知
     showNotification(message, type = 'info') {
+        // 根据通知类型播放不同音效
+        if (window.audioManager) {
+            switch(type) {
+                case 'success':
+                    audioManager.playSound('success');
+                    break;
+                case 'error':
+                    audioManager.playSound('error');
+                    break;
+                default:
+                    audioManager.playSound('click');
+                    break;
+            }
+        }
+
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;

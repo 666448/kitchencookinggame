@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音效系统测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .sound-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .sound-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .sound-button:active {
+            transform: translateY(0);
+        }
+        
+        .status-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .debug-log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-enabled {
+            background: #4CAF50;
+        }
+        
+        .status-disabled {
+            background: #F44336;
+        }
+        
+        /* 音频控制样式 */
+        .audio-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .audio-control-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audio-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+        }
+
+        #volume-slider {
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        #volume-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔊 音效系统测试</h1>
+        <p>测试各种游戏音效是否正常工作</p>
+        
+        <div class="status-info">
+            <h3>📊 音效状态</h3>
+            <p><span id="sound-status" class="status-indicator status-enabled"></span>
+               <span id="sound-status-text">音效已启用</span></p>
+            <p><strong>音量：</strong><span id="volume-display">50%</span></p>
+            <p><strong>音效数量：</strong><span id="sound-count">5</span></p>
+        </div>
+        
+        <div class="sound-grid">
+            <div class="sound-button" onclick="testSound('cooking')">
+                🍳 烹饪音效<br>
+                <small>开始烹饪时播放</small>
+            </div>
+            <div class="sound-button" onclick="testSound('success')">
+                🎉 成功音效<br>
+                <small>成功操作时播放</small>
+            </div>
+            <div class="sound-button" onclick="testSound('error')">
+                ❌ 错误音效<br>
+                <small>错误操作时播放</small>
+            </div>
+            <div class="sound-button" onclick="testSound('click')">
+                🖱️ 点击音效<br>
+                <small>点击按钮时播放</small>
+            </div>
+            <div class="sound-button" onclick="testSound('coin')">
+                💰 金币音效<br>
+                <small>获得金币时播放</small>
+            </div>
+        </div>
+        
+        <div class="status-info">
+            <h3>🎮 测试功能</h3>
+            <button class="test-button" onclick="testAllSounds()">测试所有音效</button>
+            <button class="test-button" onclick="toggleSoundEffects()">切换音效开关</button>
+            <button class="test-button" onclick="checkSoundStatus()">检查音效状态</button>
+            <button class="test-button" onclick="clearDebugLog()">清空调试日志</button>
+            <button class="test-button" onclick="window.location.href='index.html'">返回主游戏</button>
+        </div>
+        
+        <div class="status-info">
+            <h3>🔧 调试信息</h3>
+            <div id="debug-log" class="debug-log">
+                等待音效系统初始化...
+            </div>
+        </div>
+        
+        <div class="status-info">
+            <h3>📋 音效说明</h3>
+            <ul>
+                <li><strong>在线音效：</strong>优先使用在线音效文件</li>
+                <li><strong>备用音效：</strong>如果在线音效失败，使用Web Audio API生成</li>
+                <li><strong>音效开关：</strong>可通过左上角控制面板或测试按钮控制</li>
+                <li><strong>音量调节：</strong>音效音量为主音量的70%</li>
+                <li><strong>同时播放：</strong>支持多个音效同时播放</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="js/audio-manager.js"></script>
+    <script>
+        let originalConsoleLog = console.log;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔊 音效测试页面加载完成');
+            updateDebugLog('音效测试页面加载完成');
+            
+            if (window.audioManager) {
+                // 初始化音频控制
+                audioManager.initAudioControls();
+                
+                // 重写console.log来捕获调试信息
+                console.log = function(...args) {
+                    originalConsoleLog.apply(console, args);
+                    if (args[0] && args[0].includes('🎵')) {
+                        updateDebugLog(args.join(' '));
+                    }
+                };
+                
+                // 更新状态显示
+                updateSoundStatus();
+                updateDebugLog('音频管理器初始化完成');
+            } else {
+                updateDebugLog('❌ 音频管理器未找到！');
+            }
+        });
+        
+        // 测试单个音效
+        function testSound(soundName) {
+            updateDebugLog(`测试音效: ${soundName}`);
+            if (window.audioManager) {
+                audioManager.playSound(soundName);
+            } else {
+                updateDebugLog('❌ 音频管理器未加载');
+            }
+        }
+        
+        // 测试所有音效
+        function testAllSounds() {
+            const sounds = ['cooking', 'success', 'error', 'click', 'coin'];
+            updateDebugLog('开始测试所有音效...');
+            
+            sounds.forEach((sound, index) => {
+                setTimeout(() => {
+                    testSound(sound);
+                }, index * 500); // 每0.5秒播放一个音效
+            });
+        }
+        
+        // 切换音效开关
+        function toggleSoundEffects() {
+            if (window.audioManager) {
+                audioManager.toggleSound();
+                updateSoundStatus();
+                updateDebugLog(`音效已${audioManager.isSoundEnabled ? '启用' : '禁用'}`);
+            } else {
+                updateDebugLog('❌ 音频管理器未加载');
+            }
+        }
+        
+        // 检查音效状态
+        function checkSoundStatus() {
+            if (!window.audioManager) {
+                alert('音频管理器未加载');
+                return;
+            }
+            
+            const soundEffects = audioManager.soundEffects;
+            let status = `音效状态检查:\n`;
+            status += `音效启用: ${audioManager.isSoundEnabled}\n`;
+            status += `音量: ${Math.round(audioManager.currentVolume * 100)}%\n`;
+            status += `音效数量: ${Object.keys(soundEffects).length}\n\n`;
+            
+            for (const [name, sound] of Object.entries(soundEffects)) {
+                if (sound && sound.src) {
+                    status += `${name}: ${sound.src}\n`;
+                } else if (sound && sound.play) {
+                    status += `${name}: 备用音效\n`;
+                } else {
+                    status += `${name}: 未加载\n`;
+                }
+            }
+            
+            alert(status);
+            updateDebugLog('音效状态检查完成');
+        }
+        
+        // 更新音效状态显示
+        function updateSoundStatus() {
+            if (!window.audioManager) return;
+            
+            const statusIndicator = document.getElementById('sound-status');
+            const statusText = document.getElementById('sound-status-text');
+            const volumeDisplay = document.getElementById('volume-display');
+            const soundCount = document.getElementById('sound-count');
+            
+            // 更新状态指示器
+            if (audioManager.isSoundEnabled) {
+                statusIndicator.className = 'status-indicator status-enabled';
+                statusText.textContent = '音效已启用';
+            } else {
+                statusIndicator.className = 'status-indicator status-disabled';
+                statusText.textContent = '音效已禁用';
+            }
+            
+            // 更新音量显示
+            volumeDisplay.textContent = Math.round(audioManager.currentVolume * 100) + '%';
+            
+            // 更新音效数量
+            soundCount.textContent = Object.keys(audioManager.soundEffects).length;
+        }
+        
+        // 更新调试日志
+        function updateDebugLog(message) {
+            const debugLog = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `<br>[${timestamp}] ${message}`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
+        // 清空调试日志
+        function clearDebugLog() {
+            document.getElementById('debug-log').innerHTML = '调试日志已清空...';
+        }
+        
+        // 页面卸载时恢复console.log
+        window.addEventListener('beforeunload', function() {
+            console.log = originalConsoleLog;
+        });
+    </script>
+</body>
+</html> 

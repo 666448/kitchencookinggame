@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背景音乐自动播放测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-playing {
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-paused {
+            background: #FF9800;
+        }
+        
+        .status-stopped {
+            background: #F44336;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* 音频控制样式 */
+        .audio-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .audio-control-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audio-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+        }
+
+        #volume-slider {
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        #volume-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎵 背景音乐自动播放测试</h1>
+        <p>测试背景音乐是否在游戏启动时自动播放</p>
+        
+        <div class="status-info">
+            <h3>📊 音乐状态</h3>
+            <p><span id="music-status" class="status-indicator status-stopped"></span>
+               <span id="status-text">等待初始化...</span></p>
+            <p><strong>音乐文件：</strong>audio/piano_music.mp3</p>
+            <p><strong>音量：</strong><span id="volume-display">50%</span></p>
+            <p><strong>循环播放：</strong>✅ 已启用</p>
+        </div>
+        
+        <div class="status-info">
+            <h3>🎮 测试功能</h3>
+            <button class="test-button" onclick="checkMusicStatus()">检查音乐状态</button>
+            <button class="test-button" onclick="forcePlayMusic()">强制播放音乐</button>
+            <button class="test-button" onclick="testAutoPlay()">测试自动播放</button>
+            <button class="test-button" onclick="simulateUserInteraction()">模拟用户交互</button>
+            <button class="test-button" onclick="window.location.href='index.html'">返回主游戏</button>
+        </div>
+        
+        <div class="status-info">
+            <h3>📋 自动播放说明</h3>
+            <ul>
+                <li><strong>页面加载时：</strong>音频管理器会自动尝试播放背景音乐</li>
+                <li><strong>浏览器限制：</strong>现代浏览器可能阻止自动播放，需要用户交互</li>
+                <li><strong>交互触发：</strong>用户点击、按键或触摸屏幕后会尝试播放</li>
+                <li><strong>状态指示：</strong>绿色圆点表示正在播放，橙色表示暂停，红色表示停止</li>
+            </ul>
+        </div>
+        
+        <div class="status-info">
+            <h3>🔧 调试信息</h3>
+            <div id="debug-info" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;">
+                等待音频管理器初始化...
+            </div>
+        </div>
+    </div>
+
+    <script src="js/audio-manager.js"></script>
+    <script>
+        let statusCheckInterval;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎵 页面加载完成，初始化音频管理器...');
+            updateDebugInfo('页面加载完成，初始化音频管理器...');
+            
+            if (window.audioManager) {
+                // 初始化音频控制
+                audioManager.initAudioControls();
+                
+                // 开始状态检查
+                startStatusCheck();
+                
+                updateDebugInfo('音频管理器初始化完成，开始状态检查...');
+            } else {
+                updateDebugInfo('❌ 音频管理器未找到！');
+            }
+        });
+        
+        // 开始状态检查
+        function startStatusCheck() {
+            statusCheckInterval = setInterval(() => {
+                updateMusicStatus();
+            }, 1000);
+        }
+        
+        // 更新音乐状态显示
+        function updateMusicStatus() {
+            if (!window.audioManager || !audioManager.backgroundMusic) {
+                return;
+            }
+            
+            const music = audioManager.backgroundMusic;
+            const statusIndicator = document.getElementById('music-status');
+            const statusText = document.getElementById('status-text');
+            const volumeDisplay = document.getElementById('volume-display');
+            
+            // 更新状态指示器
+            if (music.paused) {
+                statusIndicator.className = 'status-indicator status-paused';
+                statusText.textContent = '音乐已暂停';
+            } else {
+                statusIndicator.className = 'status-indicator status-playing';
+                statusText.textContent = '音乐正在播放';
+            }
+            
+            // 更新音量显示
+            volumeDisplay.textContent = Math.round(audioManager.currentVolume * 100) + '%';
+        }
+        
+        // 检查音乐状态
+        function checkMusicStatus() {
+            if (!window.audioManager) {
+                alert('音频管理器未加载');
+                return;
+            }
+            
+            const music = audioManager.backgroundMusic;
+            let status = '未知';
+            
+            if (music.paused) {
+                status = '暂停';
+            } else if (music.ended) {
+                status = '结束';
+            } else if (music.readyState >= 2) {
+                status = '播放中';
+            } else {
+                status = '加载中';
+            }
+            
+            updateDebugInfo(`音乐状态检查: ${status}, 音量: ${Math.round(audioManager.currentVolume * 100)}%, 启用: ${audioManager.isMusicEnabled}`);
+            alert(`音乐状态: ${status}\n音量: ${Math.round(audioManager.currentVolume * 100)}%\n音乐启用: ${audioManager.isMusicEnabled}`);
+        }
+        
+        // 强制播放音乐
+        function forcePlayMusic() {
+            if (!window.audioManager) {
+                alert('音频管理器未加载');
+                return;
+            }
+            
+            audioManager.playBackgroundMusic();
+            updateDebugInfo('强制播放音乐已执行');
+        }
+        
+        // 测试自动播放
+        function testAutoPlay() {
+            if (!window.audioManager) {
+                alert('音频管理器未加载');
+                return;
+            }
+            
+            audioManager.attemptAutoPlay();
+            updateDebugInfo('自动播放测试已执行');
+        }
+        
+        // 模拟用户交互
+        function simulateUserInteraction() {
+            if (!window.audioManager) {
+                alert('音频管理器未加载');
+                return;
+            }
+            
+            // 触发点击事件
+            document.dispatchEvent(new Event('click'));
+            updateDebugInfo('模拟用户交互已执行');
+        }
+        
+        // 更新调试信息
+        function updateDebugInfo(message) {
+            const debugInfo = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.innerHTML += `<br>[${timestamp}] ${message}`;
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+        
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', function() {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+        });
+    </script>
+</body>
+</html> 

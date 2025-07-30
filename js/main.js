@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加一些额外的样式
     addAdditionalStyles();
     
+    // 初始化音频控制
+    if (window.audioManager) {
+        audioManager.initAudioControls();
+    }
+    
     // 初始化游戏
     initGame();
 });
@@ -13,6 +18,101 @@ document.addEventListener('DOMContentLoaded', function() {
 function addAdditionalStyles() {
     const style = document.createElement('style');
     style.textContent = `
+        /* 音频控制样式 */
+        .audio-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .audio-control-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audio-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+        }
+
+        #volume-slider {
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        #volume-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* 响应式音频控制 */
+        @media (max-width: 768px) {
+            .audio-controls {
+                top: 10px;
+                left: 10px;
+            }
+            
+            .audio-control-panel {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            
+            .audio-btn {
+                font-size: 18px;
+                width: 30px;
+                height: 30px;
+            }
+            
+            #volume-slider {
+                width: 60px;
+            }
+        }
+
         /* 模态框样式 */
         .modal {
             position: fixed;
@@ -262,11 +362,19 @@ function initGame() {
         // 新玩家，显示欢迎消息
         setTimeout(() => {
             gameLogic.showNotification('欢迎来到厨房烹饪小游戏！点击"开始游戏"开始你的美食之旅吧！', 'success');
+            // 播放欢迎音效
+            if (window.audioManager) {
+                audioManager.playSound('success');
+            }
         }, 1000);
     } else {
         // 老玩家，显示欢迎回来
         setTimeout(() => {
             gameLogic.showNotification('欢迎回来！继续你的美食之旅吧！', 'success');
+            // 播放欢迎音效
+            if (window.audioManager) {
+                audioManager.playSound('success');
+            }
         }, 1000);
     }
 
@@ -282,6 +390,10 @@ function addKeyboardShortcuts() {
             const modal = document.querySelector('.modal');
             if (modal) {
                 modal.remove();
+                // 播放音效
+                if (window.audioManager) {
+                    audioManager.playSound('click');
+                }
             }
         }
 
@@ -322,6 +434,10 @@ window.gameDebug = {
         gameLogic.savePlayerData();
         gameLogic.updateUI();
         gameLogic.showNotification(`获得 ${amount} 金币！`, 'success');
+        // 播放金币音效
+        if (window.audioManager) {
+            audioManager.playSound('coin');
+        }
     },
     addRecipe: (recipeId) => {
         const recipe = GAME_DATA.recipes.find(r => r.id === recipeId);
@@ -329,6 +445,10 @@ window.gameDebug = {
             gameLogic.playerData.inventory.recipes.push(recipe);
             gameLogic.savePlayerData();
             gameLogic.showNotification(`获得秘籍：${recipe.name}！`, 'success');
+            // 播放成功音效
+            if (window.audioManager) {
+                audioManager.playSound('success');
+            }
         }
     },
     refreshUI: () => {

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐文件测试</title>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .music-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .success {
+            background: rgba(40, 167, 69, 0.3);
+            border-left: 4px solid #28a745;
+        }
+        
+        .error {
+            background: rgba(220, 53, 69, 0.3);
+            border-left: 4px solid #dc3545;
+        }
+        
+        .loading {
+            background: rgba(255, 193, 7, 0.3);
+            border-left: 4px solid #ffc107;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎵 音乐文件测试</h1>
+        <p>测试你添加的音乐文件是否能正常播放</p>
+        
+        <div class="music-info">
+            <h3>📁 当前音乐文件</h3>
+            <p><strong>文件名：</strong>piano_music.mp3</p>
+            <p><strong>大小：</strong>7.9MB</p>
+            <p><strong>路径：</strong>audio/piano_music.mp3</p>
+        </div>
+        
+        <div class="music-info">
+            <h3>🎮 测试控制</h3>
+            <button class="test-button" onclick="testMusic()">播放音乐</button>
+            <button class="test-button" onclick="pauseMusic()">暂停音乐</button>
+            <button class="test-button" onclick="stopMusic()">停止音乐</button>
+            <button class="test-button" onclick="testVolume()">测试音量</button>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            
+            <div id="music-status" class="status"></div>
+        </div>
+        
+        <div class="music-info">
+            <h3>🔗 快速链接</h3>
+            <button class="test-button" onclick="window.location.href='audio-test.html'">完整音频测试</button>
+            <button class="test-button" onclick="window.location.href='index.html'">返回主游戏</button>
+        </div>
+    </div>
+
+    <script>
+        let audio = null;
+        let isPlaying = false;
+        
+        function testMusic() {
+            if (!audio) {
+                audio = new Audio('audio/piano_music.mp3');
+                audio.loop = true;
+                audio.volume = 0.5;
+                
+                // 监听加载事件
+                audio.addEventListener('loadstart', () => {
+                    updateStatus('🔄 开始加载音乐文件...', 'loading');
+                });
+                
+                audio.addEventListener('canplay', () => {
+                    updateStatus('✅ 音乐文件加载成功，可以播放', 'success');
+                });
+                
+                audio.addEventListener('error', (e) => {
+                    updateStatus('❌ 音乐文件加载失败: ' + e.message, 'error');
+                });
+                
+                // 监听播放进度
+                audio.addEventListener('timeupdate', () => {
+                    if (audio.duration) {
+                        const progress = (audio.currentTime / audio.duration) * 100;
+                        document.getElementById('progress-fill').style.width = progress + '%';
+                    }
+                });
+            }
+            
+            audio.play().then(() => {
+                isPlaying = true;
+                updateStatus('🎵 音乐正在播放中...', 'success');
+            }).catch(error => {
+                updateStatus('❌ 播放失败: ' + error.message, 'error');
+            });
+        }
+        
+        function pauseMusic() {
+            if (audio && isPlaying) {
+                audio.pause();
+                isPlaying = false;
+                updateStatus('⏸️ 音乐已暂停', 'loading');
+            }
+        }
+        
+        function stopMusic() {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+                isPlaying = false;
+                document.getElementById('progress-fill').style.width = '0%';
+                updateStatus('⏹️ 音乐已停止', 'loading');
+            }
+        }
+        
+        function testVolume() {
+            if (audio) {
+                // 测试不同音量
+                const volumes = [0.2, 0.5, 0.8, 1.0];
+                let currentIndex = 0;
+                
+                const volumeTest = setInterval(() => {
+                    if (currentIndex < volumes.length) {
+                        audio.volume = volumes[currentIndex];
+                        updateStatus(`🔊 测试音量: ${Math.round(volumes[currentIndex] * 100)}%`, 'loading');
+                        currentIndex++;
+                    } else {
+                        clearInterval(volumeTest);
+                        audio.volume = 0.5;
+                        updateStatus('✅ 音量测试完成，已设置为50%', 'success');
+                    }
+                }, 1000);
+            }
+        }
+        
+        function updateStatus(message, type) {
+            const statusElement = document.getElementById('music-status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+        
+        // 页面加载时检查文件
+        window.addEventListener('load', () => {
+            // 检查音乐文件是否存在
+            fetch('audio/piano_music.mp3', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        updateStatus('✅ 音乐文件存在，可以正常使用', 'success');
+                    } else {
+                        updateStatus('❌ 音乐文件不存在或无法访问', 'error');
+                    }
+                })
+                .catch(error => {
+                    updateStatus('❌ 检查音乐文件时出错: ' + error.message, 'error');
+                });
+        });
+    </script>
+</body>
+</html> 
